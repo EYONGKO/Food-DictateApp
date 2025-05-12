@@ -46,7 +46,7 @@ export default function TermsOfServiceScreen() {
             <View style={[styles.sectionContent, { backgroundColor: colors.card }]}>
               <View style={styles.termsContainer}>
                 <Text style={[styles.lastUpdated, { color: colors.textSecondary }]}>
-                  Last Updated: June 1, 2023
+                  Last Updated: January 15, 2025
                 </Text>
 
                 <Text style={[styles.sectionHeader, { color: colors.text }]}>

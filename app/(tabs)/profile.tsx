@@ -276,7 +276,7 @@ export default function ProfileScreen() {
           alignItems: 'center',
         }}>
           <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 16 }}>
-            Welcome to your healthy journey!
+            Welcome to Food Dictation 2025!
           </Text>
         </View>
         {/* Gradient Bar Section */}
@@ -369,18 +369,38 @@ export default function ProfileScreen() {
           <Text style={[styles.logoutButtonText, { color: COLORS.red }]}>{t('profile.logoutButton')}</Text>
         </TouchableOpacity>
 
-        {/* List users from database */}
-        <View style={{ margin: 20 }}>
-          <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Database Users:</Text>
-          {users.map(user => (
-            <Text key={user._id}>{user.name} - {user.email}</Text>
-          ))}
+        {/* Account Information */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Account Information
+          </Text>
+          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Account Type</Text>
+            <Text style={[styles.infoValue, { color: colors.text }]}>Premium</Text>
+          </View>
+          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Member Since</Text>
+            <Text style={[styles.infoValue, { color: colors.text }]}>January 2025</Text>
+          </View>
+          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Last Login</Text>
+            <Text style={[styles.infoValue, { color: colors.text }]}>{new Date().toLocaleDateString()}</Text>
+          </View>
         </View>
 
-        <View style={{ padding: 24 }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}>User Info (from Firebase):</Text>
-          <Text>Email: {user?.email || 'Not logged in'}</Text>
-          <Text>User ID: {user?.uid || 'N/A'}</Text>
+        {/* App Information */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            App Information
+          </Text>
+          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Version</Text>
+            <Text style={[styles.infoValue, { color: colors.text }]}>2.0.1</Text>
+          </View>
+          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Build</Text>
+            <Text style={[styles.infoValue, { color: colors.text }]}>2025.01.15</Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
