@@ -538,7 +538,7 @@ export default function HomeScreen() {
         </Menu>
         {/* ------------------- */}
 
-        <Text style={[styles.headerTitle, { color: colors.background }]}>Food Dictation 2025</Text>
+        <Text style={[styles.headerTitle, { color: colors.background }]}>FOOD DICTATION</Text>
 
         <TouchableOpacity
           style={styles.profileButton}

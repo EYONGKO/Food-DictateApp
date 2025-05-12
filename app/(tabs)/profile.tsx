@@ -276,7 +276,7 @@ export default function ProfileScreen() {
           alignItems: 'center',
         }}>
           <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 16 }}>
-            Welcome to Food Dictation 2025!
+            Welcome to FOOD DICTATION!
           </Text>
         </View>
         {/* Gradient Bar Section */}
