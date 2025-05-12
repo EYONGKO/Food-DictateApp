@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -370,38 +370,136 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         {/* Account Information */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Account Information
-          </Text>
-          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Account Type</Text>
-            <Text style={[styles.infoValue, { color: colors.text }]}>Premium</Text>
+        <LinearGradient
+          colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.sectionGradient}
+        >
+          <View style={[styles.sectionContent, { backgroundColor: colors.card }]}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="person-circle" size={24} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Account Information
+              </Text>
+            </View>
+
+            <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+              <View style={styles.infoLabelContainer}>
+                <Ionicons name="star" size={18} color={colors.primary} style={styles.infoIcon} />
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Account Type</Text>
+              </View>
+              <View style={[styles.badgeContainer, { backgroundColor: colors.primary + '20' }]}>
+                <Text style={[styles.badgeText, { color: colors.primary }]}>Premium</Text>
+              </View>
+            </View>
+
+            <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+              <View style={styles.infoLabelContainer}>
+                <Ionicons name="calendar" size={18} color={colors.primary} style={styles.infoIcon} />
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Member Since</Text>
+              </View>
+              <Text style={[styles.infoValue, { color: colors.text }]}>January 2025</Text>
+            </View>
+
+            <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+              <View style={styles.infoLabelContainer}>
+                <Ionicons name="time" size={18} color={colors.primary} style={styles.infoIcon} />
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Last Login</Text>
+              </View>
+              <Text style={[styles.infoValue, { color: colors.text }]}>{new Date().toLocaleDateString()}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <View style={styles.infoLabelContainer}>
+                <Ionicons name="mail" size={18} color={colors.primary} style={styles.infoIcon} />
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email</Text>
+              </View>
+              <Text style={[styles.infoValue, { color: colors.text }]}>{user?.email || 'user@example.com'}</Text>
+            </View>
           </View>
-          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Member Since</Text>
-            <Text style={[styles.infoValue, { color: colors.text }]}>January 2025</Text>
+        </LinearGradient>
+
+        {/* Subscription Information */}
+        <LinearGradient
+          colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.sectionGradient}
+        >
+          <View style={[styles.sectionContent, { backgroundColor: colors.card }]}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="card" size={24} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Subscription Details
+              </Text>
+            </View>
+
+            <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+              <View style={styles.infoLabelContainer}>
+                <Ionicons name="calendar" size={18} color={colors.primary} style={styles.infoIcon} />
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Next Billing</Text>
+              </View>
+              <Text style={[styles.infoValue, { color: colors.text }]}>February 15, 2025</Text>
+            </View>
+
+            <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+              <View style={styles.infoLabelContainer}>
+                <Ionicons name="cash" size={18} color={colors.primary} style={styles.infoIcon} />
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Plan</Text>
+              </View>
+              <Text style={[styles.infoValue, { color: colors.text }]}>Annual ($79.99/year)</Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: colors.primary }]}
+              onPress={() => {}}
+            >
+              <Text style={styles.buttonText}>Manage Subscription</Text>
+            </TouchableOpacity>
           </View>
-          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Last Login</Text>
-            <Text style={[styles.infoValue, { color: colors.text }]}>{new Date().toLocaleDateString()}</Text>
-          </View>
-        </View>
+        </LinearGradient>
 
         {/* App Information */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            App Information
-          </Text>
-          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Version</Text>
-            <Text style={[styles.infoValue, { color: colors.text }]}>2.0.1</Text>
+        <LinearGradient
+          colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.sectionGradient}
+        >
+          <View style={[styles.sectionContent, { backgroundColor: colors.card }]}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="information-circle" size={24} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                App Information
+              </Text>
+            </View>
+
+            <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+              <View style={styles.infoLabelContainer}>
+                <Ionicons name="code" size={18} color={colors.primary} style={styles.infoIcon} />
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Version</Text>
+              </View>
+              <Text style={[styles.infoValue, { color: colors.text }]}>2.0.1</Text>
+            </View>
+
+            <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+              <View style={styles.infoLabelContainer}>
+                <Ionicons name="construct" size={18} color={colors.primary} style={styles.infoIcon} />
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Build</Text>
+              </View>
+              <Text style={[styles.infoValue, { color: colors.text }]}>2025.01.15</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <View style={styles.infoLabelContainer}>
+                <Ionicons name="globe" size={18} color={colors.primary} style={styles.infoIcon} />
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Region</Text>
+              </View>
+              <Text style={[styles.infoValue, { color: colors.text }]}>United States</Text>
+            </View>
           </View>
-          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Build</Text>
-            <Text style={[styles.infoValue, { color: colors.text }]}>2025.01.15</Text>
-          </View>
-        </View>
+        </LinearGradient>
       </ScrollView>
     </SafeAreaView>
   );
@@ -481,6 +579,35 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 1,
   },
+  sectionGradient: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 15,
+    padding: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.2)',
+      }
+    }),
+  },
+  sectionContent: {
+    borderRadius: 15,
+    padding: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
@@ -493,6 +620,14 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 15,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+  },
+  infoLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoIcon: {
+    marginRight: 8,
   },
   infoLabel: {
     fontSize: 15,
@@ -500,6 +635,26 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 15,
     fontWeight: '500',
+  },
+  badgeContainer: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  badgeText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  button: {
+    marginTop: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   recentScanItem: {
     flexDirection: 'row',
