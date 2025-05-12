@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions
 import { useTheme } from '../../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Recipe {
   id: string;
@@ -27,8 +28,8 @@ export default function SimilarRecipes({ baseRecipe, recipes }: SimilarRecipesPr
 
   const categories = ['All', 'Vegetarian', 'Low-carb', 'High-protein'];
 
-  const filteredRecipes = selectedCategory === 'All' 
-    ? recipes 
+  const filteredRecipes = selectedCategory === 'All'
+    ? recipes
     : recipes.filter(recipe => recipe.tags.includes(selectedCategory.toLowerCase()));
 
   const RecipeCard = ({ recipe }: { recipe: Recipe }) => {
@@ -55,7 +56,7 @@ export default function SimilarRecipes({ baseRecipe, recipes }: SimilarRecipesPr
         onPressOut={handlePressOut}
         onPress={() => router.push({
           pathname: '/scan-results',
-          params: { 
+          params: {
             imageUri: recipe.icon,
             foodName: recipe.name,
             ingredients: JSON.stringify(recipe.tags),
@@ -65,52 +66,64 @@ export default function SimilarRecipes({ baseRecipe, recipes }: SimilarRecipesPr
       >
         <Animated.View
           style={[
-            styles.recipeCard,
-            { 
-              backgroundColor: theme.colors.card,
-              shadowColor: theme.colors.text,
+            styles.recipeCardWrapper,
+            {
               transform: [{ scale: scaleAnim }]
             }
           ]}
         >
-          <View style={[styles.recipeImageContainer, { backgroundColor: theme.colors.background }]}>
-            <Image
-              source={{ uri: recipe.icon }}
-              style={styles.recipeIcon}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={styles.recipeContent}>
-            <Text style={[styles.recipeName, { color: theme.colors.text }]} numberOfLines={2}>
-              {recipe.name}
-            </Text>
-            <View style={styles.recipeInfo}>
-              <View style={styles.infoItem}>
-                <Ionicons name="time-outline" size={16} color={theme.colors.primary} />
-                <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
-                  {recipe.cookTime} min
-                </Text>
+          <LinearGradient
+            colors={[theme.colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.recipeCardGradient}
+          >
+            <LinearGradient
+              colors={[theme.colors.card, theme.colors.card + '99']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.recipeCard, { borderColor: 'transparent' }]}
+            >
+              <View style={[styles.recipeImageContainer, { backgroundColor: theme.colors.background }]}>
+                <Image
+                  source={{ uri: recipe.icon }}
+                  style={styles.recipeIcon}
+                  resizeMode="contain"
+                />
               </View>
-              <View style={styles.infoItem}>
-                <Ionicons name="flame-outline" size={16} color={theme.colors.primary} />
-                <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
-                  {recipe.calories} cal
+              <View style={styles.recipeContent}>
+                <Text style={[styles.recipeName, { color: theme.colors.text }]} numberOfLines={2}>
+                  {recipe.name}
                 </Text>
-              </View>
-            </View>
-            <View style={styles.tagContainer}>
-              {recipe.tags.slice(0, 2).map((tag, index) => (
-                <View 
-                  key={index} 
-                  style={[styles.tag, { backgroundColor: theme.colors.primary + '20' }]}
-                >
-                  <Text style={[styles.tagText, { color: theme.colors.primary }]}>
-                    {tag}
-                  </Text>
+                <View style={styles.recipeInfo}>
+                  <View style={styles.infoItem}>
+                    <Ionicons name="time-outline" size={16} color={theme.colors.primary} />
+                    <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
+                      {recipe.cookTime} min
+                    </Text>
+                  </View>
+                  <View style={styles.infoItem}>
+                    <Ionicons name="flame-outline" size={16} color={theme.colors.primary} />
+                    <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
+                      {recipe.calories} cal
+                    </Text>
+                  </View>
                 </View>
-              ))}
-            </View>
-          </View>
+                <View style={styles.tagContainer}>
+                  {recipe.tags.slice(0, 2).map((tag, index) => (
+                    <View
+                      key={`tag-${index}`}
+                      style={[styles.tag, { backgroundColor: theme.colors.primary + '20' }]}
+                    >
+                      <Text style={[styles.tagText, { color: theme.colors.primary }]}>
+                        {tag}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </LinearGradient>
+          </LinearGradient>
         </Animated.View>
       </TouchableOpacity>
     );
@@ -119,14 +132,14 @@ export default function SimilarRecipes({ baseRecipe, recipes }: SimilarRecipesPr
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons 
-            name="arrow-back" 
-            size={24} 
-            color={theme.colors.background} 
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={theme.colors.background}
           />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.background }]}>
@@ -141,41 +154,48 @@ export default function SimilarRecipes({ baseRecipe, recipes }: SimilarRecipesPr
         </Text>
       </View>
 
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.categoriesContainer}
         contentContainerStyle={styles.categoriesContent}
       >
         {categories.map((category) => (
-          <TouchableOpacity
+          <View
             key={category}
-            style={[
-              styles.categoryButton,
-              selectedCategory === category && styles.activeCategory,
-              { 
-                backgroundColor: selectedCategory === category 
-                  ? theme.colors.primary 
-                  : theme.colors.card 
-              }
-            ]}
-            onPress={() => setSelectedCategory(category)}
+            style={styles.categoryButtonWrapper}
           >
-            <Text style={[
-              styles.categoryText,
-              { 
-                color: selectedCategory === category 
-                  ? theme.colors.background 
-                  : theme.colors.text 
-              }
-            ]}>
-              {category}
-            </Text>
-          </TouchableOpacity>
+            {selectedCategory === category ? (
+              <LinearGradient
+                colors={[theme.colors.primary, theme.colors.primary + 'CC']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[styles.categoryButton, styles.activeCategory]}
+              >
+                <TouchableOpacity
+                  style={styles.categoryButtonTouchable}
+                  onPress={() => setSelectedCategory(category)}
+                >
+                  <Text style={[styles.categoryText, { color: theme.colors.background }]}>
+                    {category}
+                  </Text>
+                </TouchableOpacity>
+              </LinearGradient>
+            ) : (
+              <TouchableOpacity
+                style={[styles.categoryButton, { backgroundColor: theme.colors.card }]}
+                onPress={() => setSelectedCategory(category)}
+              >
+                <Text style={[styles.categoryText, { color: theme.colors.text }]}>
+                  {category}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         ))}
       </ScrollView>
 
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.recipesContainer}
       >
@@ -185,26 +205,45 @@ export default function SimilarRecipes({ baseRecipe, recipes }: SimilarRecipesPr
           ))}
         </View>
 
-        <TouchableOpacity 
-          style={[styles.seeAllButton, { 
-            borderColor: theme.colors.primary,
-            backgroundColor: theme.colors.primary + '10',
-            elevation: 2,
-            shadowColor: theme.colors.primary,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-          }]}
-          onPress={() => router.push({
-            pathname: '/(tabs)/recipes',
-            params: { category: selectedCategory }
-          })}
-        >
-          <Text style={[styles.seeAllText, { color: theme.colors.primary }]}>
-            See All Recipes
+        <View style={styles.seeAllButtonContainer}>
+          <LinearGradient
+            colors={[theme.colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.seeAllButtonGradient}
+          >
+            <LinearGradient
+              colors={[theme.colors.card, theme.colors.card + '99']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.seeAllButtonWrapper}
+            >
+              <TouchableOpacity
+                style={styles.buttonContainer}
+                onPress={() => router.push({
+                  pathname: '/(tabs)/recipes',
+                  params: { category: selectedCategory }
+                })}
+              >
+                <LinearGradient
+                  colors={[theme.colors.primary, theme.colors.primary + 'CC']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.seeAllButton}
+                >
+                  <Ionicons name="restaurant" size={20} color="white" style={styles.seeAllIcon} />
+                  <Text style={[styles.seeAllText, { color: 'white' }]}>
+                    Explore All Recipes
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </LinearGradient>
+          </LinearGradient>
+
+          <Text style={[styles.seeAllSubtext, { color: theme.colors.textSecondary }]}>
+            Discover more delicious recipes in our collection
           </Text>
-          <Ionicons name="arrow-forward" size={20} color={theme.colors.primary} />
-        </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   );
@@ -244,16 +283,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     gap: 8,
   },
+  categoryButtonWrapper: {
+    marginHorizontal: 4,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
   categoryButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    marginHorizontal: 4,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+  },
+  categoryButtonTouchable: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   activeCategory: {
     elevation: 4,
@@ -274,22 +323,31 @@ const styles = StyleSheet.create({
     gap: 16,
     justifyContent: 'space-between',
   },
-  recipeCard: {
+  recipeCardWrapper: {
     width: cardWidth,
-    borderRadius: 16,
     marginBottom: 16,
-    overflow: 'hidden',
-    elevation: 4,
+  },
+  recipeCardGradient: {
+    width: '100%',
+    borderRadius: 16,
+    padding: 2,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  recipeCard: {
+    width: '100%',
+    borderRadius: 15,
+    overflow: 'hidden',
   },
   recipeImageContainer: {
     height: cardWidth * 0.75,
     justifyContent: 'center',
     alignItems: 'center',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
     overflow: 'hidden',
   },
   recipeIcon: {
@@ -330,18 +388,53 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
   },
+  seeAllButtonContainer: {
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 32,
+    paddingHorizontal: 16,
+  },
+  seeAllButtonGradient: {
+    width: '100%',
+    borderRadius: 25,
+    padding: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+    marginBottom: 12,
+  },
+  seeAllButtonWrapper: {
+    width: '100%',
+    borderRadius: 25,
+    padding: 0,
+  },
+  buttonContainer: {
+    width: '100%',
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
   seeAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginBottom: 24,
+    borderRadius: 25,
+    width: '100%',
     gap: 8,
+  },
+  seeAllIcon: {
+    marginRight: 4,
   },
   seeAllText: {
     fontSize: 16,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
-}); 
+  seeAllSubtext: {
+    fontSize: 14,
+    textAlign: 'center',
+    opacity: 0.8,
+  },
+});

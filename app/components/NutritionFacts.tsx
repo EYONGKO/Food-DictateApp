@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface NutritionFactsProps {
   servingSize: string;
@@ -44,14 +45,14 @@ export default function NutritionFacts({
     divider?: boolean;
   }
 
-  const NutrientRow = ({ 
-    label, 
-    value, 
-    unit, 
-    dailyValue, 
+  const NutrientRow = ({
+    label,
+    value,
+    unit,
+    dailyValue,
     indent = false,
     bold = false,
-    divider = true 
+    divider = true
   }: NutrientRowProps) => (
     <>
       <View style={[
@@ -97,27 +98,25 @@ export default function NutritionFacts({
   );
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: theme.colors.card }]}
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[
-        styles.card,
-        {
-          borderColor: theme.colors.border,
-          backgroundColor: theme.colors.card,
-          shadowColor: theme.colors.card,
-          overflow: 'hidden',
-        },
-      ]}>
-        <View style={{
-          ...StyleSheet.absoluteFillObject,
-          backgroundColor: theme.colors.primary + '10',
-          zIndex: 0,
-        }} />
+      <LinearGradient
+        colors={[theme.colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.cardGradient}
+      >
+        <LinearGradient
+          colors={[theme.colors.card, theme.colors.card + '99']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.card, { borderColor: 'transparent' }]}
+        >
         <Text style={[styles.header, { color: theme.colors.text, zIndex: 1 }]}>Nutrition Facts</Text>
         <View style={[styles.thickDivider, { backgroundColor: theme.colors.primary, zIndex: 1 }]} />
-        
+
         <View style={styles.servingContainer}>
           <Text style={[styles.servingInfo, { color: theme.colors.text }]}>
             {servingsPerContainer} serving per container
@@ -133,7 +132,7 @@ export default function NutritionFacts({
         </View>
 
         <View style={[styles.thickDivider, { backgroundColor: theme.colors.text }]} />
-        
+
         <View style={styles.calorieSection}>
           <Text style={[styles.calorieLabel, { color: theme.colors.text }]}>Calories</Text>
           <Text style={[
@@ -146,7 +145,7 @@ export default function NutritionFacts({
         </View>
 
         <View style={[styles.thickDivider, { backgroundColor: theme.colors.text }]} />
-        
+
         <Text style={[styles.dailyValueNote, { color: theme.colors.textSecondary }]}>
           % Daily Value*
         </Text>
@@ -259,7 +258,8 @@ export default function NutritionFacts({
         <Text style={[styles.footnote, { color: theme.colors.textSecondary }]}>
           * The % Daily Value (DV) tells you how much a nutrient in a serving of food contributes to a daily diet. 2,000 calories a day is used for general nutrition advice.
         </Text>
-      </View>
+        </LinearGradient>
+      </LinearGradient>
     </ScrollView>
   );
 }
@@ -268,15 +268,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  card: {
+  cardGradient: {
     margin: 16,
+    borderRadius: 15,
+    padding: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 6,
+      },
+      web: {
+        boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.3)',
+      }
+    }),
+  },
+  card: {
+    width: '100%',
     padding: 20,
     borderRadius: 15,
-    borderWidth: 1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    overflow: 'hidden',
   },
   header: {
     fontSize: 28,
@@ -394,4 +409,4 @@ const styles = StyleSheet.create({
   zeroValue: {
     opacity: 0.5,
   },
-}); 
+});

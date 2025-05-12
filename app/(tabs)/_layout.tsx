@@ -59,6 +59,32 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="recipes"
+        options={{
+          title: 'Recipes',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'restaurant' : 'restaurant-outline'}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="nutrition-facts"
+        options={{
+          title: 'Nutrition',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'nutrition' : 'nutrition-outline'}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
@@ -69,18 +95,6 @@ export default function TabLayout() {
               color={color}
             />
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="recipes"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="nutrition-facts"
-        options={{
-          href: null,
         }}
       />
     </Tabs>

@@ -1,30 +1,49 @@
 import { Stack } from 'expo-router';
-import { useEffect } from 'react';
-import { useFonts } from 'expo-font';
-import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { MenuProvider } from 'react-native-popup-menu';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/i18n/i18n';
-
-// Keep the splash screen visible while we fetch resources
-SplashScreen.preventAutoHideAsync();
+import { useColorScheme } from '../hooks/useColorScheme';
+import { useEffect, useState } from 'react';
+import { router, usePathname } from 'expo-router';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import '../firebase';
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user);
+    });
+    return unsubscribe;
+  }, []);
 
-  if (!loaded) {
-    return null;
+  useEffect(() => {
+    if (isLoggedIn === false && pathname !== '/login' && pathname !== '/register') {
+      router.replace('/login');
+    }
+  }, [pathname, isLoggedIn]);
+
+  if (isLoggedIn === null) {
+    return null; // or a loading spinner
   }
+
+  const handleLogout = async () => {
+    const auth = getAuth();
+    await signOut(auth);
+    router.replace('/login');
+  };
+
+  const handleMenuSelect = async (value: string) => {
+    if (value === 'logout') {
+      await handleLogout();
+    }
+    // ...existing navigation logic
+  };
 
   return (
     <I18nextProvider i18n={i18n}>
@@ -38,6 +57,8 @@ export default function RootLayout() {
               <Stack.Screen name="scan-results" />
               <Stack.Screen name="nutrition-facts" />
               <Stack.Screen name="similar-recipes" />
+              <Stack.Screen name="login" />
+              <Stack.Screen name="register" />
             </Stack>
           </SafeAreaProvider>
         </MenuProvider>

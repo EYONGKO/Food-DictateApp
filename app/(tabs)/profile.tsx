@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import events from '../../utils/events';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getUsers, addUser } from '../../utils/api';
+import { getAuth } from 'firebase/auth';
 
 // Storage keys
 const LIBRARY_STORAGE_KEY = '@FoodDictateApp:Library';
@@ -43,8 +44,8 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
 
   // Profile Info State
-  const [userName, setUserName] = useState("Loading..."); 
-  const [userEmail, setUserEmail] = useState("Loading..."); 
+  const [userName, setUserName] = useState("Loading...");
+  const [userEmail, setUserEmail] = useState("Loading...");
   const [userImageUri, setUserImageUri] = useState<string | null>(null);
   const [dietaryPrefs, setDietaryPrefs] = useState<string[]>([]);
   const [allergies, setAllergies] = useState<string[]>([]);
@@ -59,6 +60,8 @@ export default function ProfileScreen() {
   const [users, setUsers] = useState([]);
 
   const primary = colors.primary || '#22C55E';
+
+  const user = getAuth().currentUser;
 
   // Load profile data and stats on focus
   useFocusEffect(
@@ -149,9 +152,9 @@ export default function ProfileScreen() {
       t('profile.logoutConfirmMessage'),
       [
         { text: t('common.cancel'), style: "cancel" },
-        { 
-          text: t('profile.logoutButton'), 
-          style: "destructive", 
+        {
+          text: t('profile.logoutButton'),
+          style: "destructive",
           onPress: () => {
             // TODO: Implement actual logout logic
             console.log("User logged out (Placeholder)");
@@ -224,7 +227,7 @@ export default function ProfileScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* User Info Section */}
-        <View style={[styles.profileContainer, { backgroundColor: colors.card }]}> 
+        <View style={[styles.profileContainer, { backgroundColor: colors.card }]}>
           {/* Subtle primary tint overlay */}
           <View style={{
             ...StyleSheet.absoluteFillObject,
@@ -233,13 +236,18 @@ export default function ProfileScreen() {
             borderRadius: 10,
           }} />
           <View style={{ zIndex: 1 }}>
-            {userImageUri ? (
-              <Image source={{ uri: userImageUri }} style={styles.profileImage} />
-            ) : (
-              <View style={[styles.profileImage, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}> 
-                <Text style={{ fontSize: 32, color: '#888' }}>?</Text>
+            <TouchableOpacity onPress={handleEditProfile}>
+              {userImageUri ? (
+                <Image source={{ uri: userImageUri }} style={styles.profileImage} />
+              ) : (
+                <View style={[styles.profileImage, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
+                  <Text style={{ fontSize: 32, color: '#888' }}>?</Text>
+                </View>
+              )}
+              <View style={[styles.editIconOverlay, { backgroundColor: colors.primary + '80', borderColor: colors.background }]}>
+                <Ionicons name="camera-outline" size={16} color={colors.background} />
               </View>
-            )}
+            </TouchableOpacity>
             <Text style={[styles.profileName, { color: colors.text }]}>{userName}</Text>
             <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>{userEmail}</Text>
             <View style={styles.profileStats}>
@@ -285,7 +293,7 @@ export default function ProfileScreen() {
         />
 
         {/* Recent Scans Section */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}> 
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {t('profile.recentScans')}
           </Text>
@@ -299,17 +307,17 @@ export default function ProfileScreen() {
         </View>
 
         {/* Dietary Preferences Section */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}> 
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {t('profile.dietaryPreferences')}
           </Text>
           <View style={styles.preferencesContainer}>
             {dietaryPrefs.map((pref, index) => (
-              <View 
+              <View
                 key={index}
                 style={[styles.preferenceTag, { backgroundColor: colors.primary + '20' }]}
               >
-                <Text style={[styles.preferenceText, { color: colors.primary }]}> 
+                <Text style={[styles.preferenceText, { color: colors.primary }]}>
                   {pref}
                 </Text>
               </View>
@@ -323,17 +331,17 @@ export default function ProfileScreen() {
         </View>
 
         {/* Allergies Section */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}> 
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {t('profile.allergies')}
           </Text>
           <View style={styles.preferencesContainer}>
             {allergies.map((allergy, index) => (
-              <View 
+              <View
                 key={index}
                 style={[styles.preferenceTag, { backgroundColor: colors.error + '20' }]}
               >
-                <Text style={[styles.preferenceText, { color: colors.error }]}> 
+                <Text style={[styles.preferenceText, { color: colors.error }]}>
                   {allergy}
                 </Text>
               </View>
@@ -361,12 +369,18 @@ export default function ProfileScreen() {
           <Text style={[styles.logoutButtonText, { color: COLORS.red }]}>{t('profile.logoutButton')}</Text>
         </TouchableOpacity>
 
-        {/* Example: List users from MongoDB backend */}
+        {/* List users from database */}
         <View style={{ margin: 20 }}>
-          <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Users from MongoDB:</Text>
+          <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Database Users:</Text>
           {users.map(user => (
             <Text key={user._id}>{user.name} - {user.email}</Text>
           ))}
+        </View>
+
+        <View style={{ padding: 24 }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}>User Info (from Firebase):</Text>
+          <Text>Email: {user?.email || 'Not logged in'}</Text>
+          <Text>User ID: {user?.uid || 'N/A'}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -528,4 +542,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     overflow: 'hidden',
   },
-}); 
+  editIconOverlay: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    padding: 5,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+});

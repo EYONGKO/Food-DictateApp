@@ -2,17 +2,20 @@ import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, Platform, ViewStyle, TextStyle, FlexAlignType, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Assuming you have Ionicons installed or replace with your icon library
-import { Ionicons } from '@expo/vector-icons'; 
+import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 // Import dropdown components
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import { getRecentScans, RecentScan } from '@/utils/storage';
-import LottieView from 'lottie-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import events from '@/utils/events';
+import { LinearGradient } from 'expo-linear-gradient';
+
+// Import Lottie for native platforms only
+import LottieView from 'lottie-react-native';
 const fireAnimation = require('../../assets/images/Animation - 1746832367326.json');
 
 // Placeholder data - replace with actual data fetching
@@ -34,10 +37,11 @@ const menuItems = [
   { value: 'library', icon: 'library-outline' as keyof typeof Ionicons.glyphMap, label: 'Library' },
   { value: 'profile', icon: 'person-circle-outline' as keyof typeof Ionicons.glyphMap, label: 'Profile' },
   { value: 'settings', icon: 'settings-outline' as keyof typeof Ionicons.glyphMap, label: 'Settings', isDividerTop: true },
+  { value: 'logout', icon: 'log-out-outline' as keyof typeof Ionicons.glyphMap, label: 'Logout', isDividerTop: true },
 ];
 // ---------------------------
 
-// --- Styles --- 
+// --- Styles ---
 // Define base styles
 const styles = StyleSheet.create({
   safeArea: {
@@ -64,15 +68,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollViewContent: {
+    paddingTop: 10,
     paddingBottom: 30, // More space at the bottom
   },
   welcomeCard: {
-    borderRadius: 15,
-    padding: 20,
-    marginHorizontal: 15,
-    marginTop: 20, // Increased top margin
-    marginBottom: 15,
+    borderRadius: 18,
+    padding: 12,
+    marginTop: 0,
+    marginBottom: 0,
     alignItems: 'center',
+    width: '100%',
+    alignSelf: 'center',
+    overflow: 'hidden',
   },
   welcomeTitle: {
     fontSize: 18,
@@ -84,21 +91,31 @@ const styles = StyleSheet.create({
     marginBottom: 20, // More space before button
     textAlign: 'center',
   },
+  scanButtonContainer: {
+    marginTop: 8,
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
   scanButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 45,
-    borderRadius: 30,
-    borderWidth: 2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
-    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    borderWidth: 0,
+    ...(Platform.OS !== 'web' ? {
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 3,
+    } : {
+      boxShadow: '0px 3px 4px rgba(0, 0, 0, 0.2)'
+    }),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scanButtonText: {
-    fontSize: 20,
+    fontSize: 12,
     fontWeight: 'bold',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   sectionContainer: {
@@ -183,12 +200,15 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   welcomeDiscover: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
-    marginTop: 10,
-    marginBottom: 10,
-    letterSpacing: 0.3,
+    marginTop: 0,
+    marginBottom: 15,
+    letterSpacing: 0.5,
+    lineHeight: 20,
+    width: '100%',
+    alignSelf: 'center',
   },
 });
 
@@ -201,50 +221,85 @@ export default function HomeScreen() {
   const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
 
   const fireFallAnim = useRef(new Animated.Value(0)).current;
-  const rotateColorAnim = useRef(new Animated.Value(0)).current;
+  const firePulseAnim = useRef(new Animated.Value(1)).current;
   const flowerFallAnim = useRef(new Animated.Value(0)).current;
+  const flowerFallAnim2 = useRef(new Animated.Value(0)).current;
+  const flowerFallAnim3 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadRecentScans();
-    // Fire falls down
+    // Fire falls down with more dramatic bounce
     Animated.timing(fireFallAnim, {
-      toValue: 120, // Adjust as needed for fall distance
-      duration: 2000,
+      toValue: 20, // Adjusted fall distance
+      duration: 1500,
       easing: Easing.bounce,
       useNativeDriver: true,
     }).start();
-    // Text rotates and animates color
+
+    // Add pulsating effect to fire
     Animated.loop(
-      Animated.timing(rotateColorAnim, {
-        toValue: 1,
-        duration: 2000,
-        easing: Easing.linear,
-        useNativeDriver: false, // Color interpolation does not support native driver
-      })
+      Animated.sequence([
+        Animated.timing(firePulseAnim, {
+          toValue: 1.1,
+          duration: 800,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(firePulseAnim, {
+          toValue: 1,
+          duration: 800,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
     ).start();
+
     // Flower falls down
     Animated.loop(
       Animated.timing(flowerFallAnim, {
-        toValue: 100, // Adjust as needed for fall distance
-        duration: 1500,
+        toValue: 80, // Increased fall distance
+        duration: 2000,
         easing: Easing.linear,
         useNativeDriver: true,
       })
     ).start();
+    // Second flower with delay
+    setTimeout(() => {
+      Animated.loop(
+        Animated.timing(flowerFallAnim2, {
+          toValue: 80,
+          duration: 2200,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      ).start();
+    }, 400);
+    // Third flower with more delay
+    setTimeout(() => {
+      Animated.loop(
+        Animated.timing(flowerFallAnim3, {
+          toValue: 80,
+          duration: 2400,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      ).start();
+    }, 800);
   }, []);
 
-  const rotate = rotateColorAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-  const color = rotateColorAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: ['#FFD600', '#2196F3', '#FFD600'], // yellow, blue, yellow
-  });
+
 
   const flowerTranslateY = flowerFallAnim.interpolate({
-    inputRange: [0, 100],
-    outputRange: [0, 100],
+    inputRange: [0, 80],
+    outputRange: [0, 80],
+  });
+  const flowerTranslateY2 = flowerFallAnim2.interpolate({
+    inputRange: [0, 80],
+    outputRange: [0, 80],
+  });
+  const flowerTranslateY3 = flowerFallAnim3.interpolate({
+    inputRange: [0, 80],
+    outputRange: [0, 80],
   });
 
   const loadRecentScans = async () => {
@@ -261,26 +316,26 @@ export default function HomeScreen() {
       const date = new Date(dateString);
       const now = new Date();
       const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-      
+
       if (diffInSeconds < 60) {
         return 'just now';
       }
-      
+
       const diffInMinutes = Math.floor(diffInSeconds / 60);
       if (diffInMinutes < 60) {
         return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
       }
-      
+
       const diffInHours = Math.floor(diffInMinutes / 60);
       if (diffInHours < 24) {
         return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
       }
-      
+
       const diffInDays = Math.floor(diffInHours / 24);
       if (diffInDays < 7) {
         return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
       }
-      
+
       return date.toLocaleDateString();
     } catch (error) {
       return 'Unknown date';
@@ -308,7 +363,7 @@ export default function HomeScreen() {
   };
   // ----------------------------------------
 
-  // --- Combined Styles --- 
+  // --- Combined Styles ---
   const recentItemCombinedStyle = StyleSheet.flatten([
       styles.recentItemBase,
       { backgroundColor: colors.card, borderColor: colors.border },
@@ -317,14 +372,19 @@ export default function HomeScreen() {
 
   const discoverCardCombinedStyle = StyleSheet.flatten([
        styles.discoverCardBase,
-       Platform.OS === 'web' ? webDiscoverCardStyle : {} 
+       Platform.OS === 'web' ? webDiscoverCardStyle : {}
    ]);
   // -----------------------
 
   // --- Navigation Handlers ---
   type TabPath = '/(tabs)/home' | '/(tabs)/scan' | '/(tabs)/library' | '/(tabs)/profile';
 
-  const handleMenuSelect = (value: string) => {
+  const handleMenuSelect = async (value: string) => {
+    if (value === 'logout') {
+      await AsyncStorage.removeItem('isLoggedIn');
+      router.replace('/login');
+      return;
+    }
     if (value === 'settings') {
       router.push('/settings' as const);
     } else {
@@ -334,7 +394,6 @@ export default function HomeScreen() {
         library: '/(tabs)/library',
         profile: '/(tabs)/profile'
       } as const;
-      
       const path = tabRoutes[value as keyof typeof tabRoutes];
       if (path) {
         router.replace(path);
@@ -407,26 +466,26 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      {/* Header */} 
+      {/* Header */}
        <View style={[styles.header, { backgroundColor: colors.primary }]}>
          {/* --- Menu Dropdown --- */}
         <Menu onSelect={handleMenuSelect}>
-            <MenuTrigger style={styles.headerButton}> 
+            <MenuTrigger style={styles.headerButton}>
                 <Ionicons name="menu-outline" size={28} color={colors.background} />
             </MenuTrigger>
-            <MenuOptions> 
+            <MenuOptions>
                 {menuItems.map((item) => (
                     <React.Fragment key={item.value}>
                         {item.isDividerTop && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
-                        <MenuOption value={item.value}> 
-                            <View style={styles.menuOptionWrapper}> 
-                                <Ionicons 
-                                    name={item.icon} 
-                                    size={20} 
-                                    color={colors.textSecondary} 
+                        <MenuOption value={item.value}>
+                            <View style={styles.menuOptionWrapper}>
+                                <Ionicons
+                                    name={item.icon}
+                                    size={20}
+                                    color={item.value === 'logout' ? colors.error : colors.textSecondary}
                                     style={styles.menuOptionIcon}
                                 />
-                                <Text style={[styles.menuOptionText, { color: colors.text }]}>{item.label}</Text>
+                                <Text style={[styles.menuOptionText, { color: item.value === 'logout' ? colors.error : colors.text }]}>{item.label}</Text>
                             </View>
                         </MenuOption>
                     </React.Fragment>
@@ -436,7 +495,7 @@ export default function HomeScreen() {
         {/* ------------------- */}
 
         <Text style={[styles.headerTitle, { color: colors.background }]}>Food Dictate</Text>
-        
+
         <TouchableOpacity
           style={styles.profileButton}
           onPress={() => router.replace('/(tabs)/profile')}
@@ -446,113 +505,236 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
-        {/* Welcome Card */} 
-         <View style={[styles.welcomeCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        {/* Welcome Card */}
+         <LinearGradient
+           colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+           start={{ x: 0, y: 0 }}
+           end={{ x: 1, y: 1 }}
+           style={{
+             borderRadius: 20,
+             padding: 2,
+             width: '88%',
+             alignSelf: 'center',
+             shadowColor: colors.primary,
+             shadowOffset: { width: 0, height: 2 },
+             shadowOpacity: 0.3,
+             shadowRadius: 10,
+             elevation: 6,
+             marginTop: 25,
+             marginBottom: 15,
+           }}>
+           <LinearGradient
+             colors={[colors.card, colors.card + '99']}
+             start={{ x: 0, y: 0 }}
+             end={{ x: 1, y: 1 }}
+             style={[styles.welcomeCard, { borderColor: 'transparent' }]}
+           >
            {/* Animated fire and rotating MATCH FIRE */}
-           <Animated.View style={{ alignItems: 'center' }}>
-             <LottieView
-               source={fireAnimation}
-               autoPlay
-               loop
-               style={{ width: 50, height: 50, marginBottom: 0 }}
-             />
+           <Animated.View style={{ alignItems: 'center', paddingTop: 5, paddingBottom: 0 }}>
+             <Animated.View style={{
+               backgroundColor: 'rgba(255, 214, 0, 0.15)',
+               borderRadius: 40,
+               padding: 5,
+               marginBottom: 2,
+               transform: [{ scale: firePulseAnim }],
+             }}>
+               {Platform.OS === 'web' ? (
+                 // Web-specific implementation
+                 <View style={{ width: 60, height: 60, justifyContent: 'center', alignItems: 'center' }}>
+                   <Text style={{ fontSize: 30 }}>🔥</Text>
+                 </View>
+               ) : (
+                 // Native implementation
+                 <LottieView
+                   source={fireAnimation}
+                   autoPlay
+                   loop
+                   style={{ width: 60, height: 60 }}
+                 />
+               )}
+             </Animated.View>
              <Animated.Text
                style={{
-                 fontSize: 48,
-                 marginBottom: 8,
+                 fontSize: 24,
+                 marginBottom: 0,
                  transform: [{ translateY: fireFallAnim }],
                }}
              >
                {/* 🔥 emoji removed, replaced by Lottie animation */}
              </Animated.Text>
-             <Animated.Text
+
+             <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', height: 50, marginBottom: -5, zIndex: 10 }}>
+               <Animated.Text
+                 style={{
+                   fontSize: 28,
+                   transform: [{ translateY: flowerTranslateY }],
+                   marginHorizontal: 5,
+                 }}
+               >
+                 🌸
+               </Animated.Text>
+               <Animated.Text
+                 style={{
+                   fontSize: 28,
+                   transform: [{ translateY: flowerTranslateY2 }],
+                   marginHorizontal: 5,
+                 }}
+               >
+                 🌸
+               </Animated.Text>
+               <Animated.Text
+                 style={{
+                   fontSize: 28,
+                   transform: [{ translateY: flowerTranslateY3 }],
+                   marginHorizontal: 5,
+                 }}
+               >
+                 🌸
+               </Animated.Text>
+             </View>
+           </Animated.View>
+           <View style={{ marginTop: -15 }}>
+             <Text
                style={[
-                 styles.welcomeTitle,
-                 { color, transform: [{ rotate }], fontSize: 14, fontWeight: '400' },
+                 styles.welcomeDiscover,
+                 {
+                   color: colors.primary,
+                   textAlign: 'center',
+                 }
                ]}
              >
-               MATCH FIRE
-             </Animated.Text>
-             <Animated.Text
-               style={{
-                 fontSize: 24,
-                 transform: [{ translateY: flowerTranslateY }],
-               }}
-             >
-               🌸
-             </Animated.Text>
-           </Animated.View>
-           <Text
-             style={[
-               styles.welcomeDiscover,
-               { color: colors.primary }
-             ]}
-           >
-             What would you like to discover today?
-           </Text>
+               What would you like to discover today?
+             </Text>
+           </View>
            <TouchableOpacity
-             style={[
-               styles.scanButton,
-               { backgroundColor: colors.primary, borderColor: colors.primary, shadowColor: colors.primary }
-             ]}
+             style={styles.scanButtonContainer}
              onPress={() => router.replace('/(tabs)/scan')}
            >
-             <Text style={[styles.scanButtonText, { color: '#FFFFFF' }]}>QUICK SCAN</Text>
+             <LinearGradient
+               colors={[colors.primary, colors.primary + 'CC']}
+               start={{ x: 0, y: 0 }}
+               end={{ x: 1, y: 1 }}
+               style={[
+                 styles.scanButton,
+                 {
+                   shadowColor: colors.primary,
+                   paddingVertical: 14,
+                   paddingHorizontal: 35
+                 }
+               ]}
+             >
+               <Text style={[styles.scanButtonText, { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' }]}>QUICK SCAN</Text>
+             </LinearGradient>
            </TouchableOpacity>
-         </View>
+           </LinearGradient>
+         </LinearGradient>
 
         {/* Quick Actions */}
         <View style={styles.sectionContainer}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
           <View style={styles.discoverContainer}>
             <Link href="/(tabs)/scan" asChild style={styles.discoverCardLink}>
-              <TouchableOpacity style={[discoverCardCombinedStyle, { backgroundColor: DISCOVER_COLORS.lightPink }]}>
-                <View style={styles.discoverIconContainer}>
-                  <Ionicons name="camera-outline" size={32} color={colors.primary} />
-                </View>
-                <Text style={[styles.discoverText, { color: colors.text }]}>Scan Food</Text>
+              <TouchableOpacity style={styles.scanButtonContainer}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primary + 'CC']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[
+                    styles.scanButton,
+                    {
+                      shadowColor: colors.primary,
+                      height: 50,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: '100%'
+                    }
+                  ]}
+                >
+                  <Ionicons name="camera-outline" size={20} color="#FFFFFF" style={{ marginBottom: 4 }} />
+                  <Text style={[styles.scanButtonText, { color: '#FFFFFF' }]}>SCAN FOOD</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </Link>
             <Link href="/(tabs)/library" asChild style={styles.discoverCardLink}>
-              <TouchableOpacity style={[discoverCardCombinedStyle, { backgroundColor: DISCOVER_COLORS.lightBlue }]}>
-                <View style={styles.discoverIconContainer}>
-                  <Ionicons name="library-outline" size={32} color={colors.primary} />
-                </View>
-                <Text style={[styles.discoverText, { color: colors.text }]}>Library</Text>
+              <TouchableOpacity style={styles.scanButtonContainer}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primary + 'CC']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[
+                    styles.scanButton,
+                    {
+                      shadowColor: colors.primary,
+                      height: 50,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: '100%'
+                    }
+                  ]}
+                >
+                  <Ionicons name="library-outline" size={20} color="#FFFFFF" style={{ marginBottom: 4 }} />
+                  <Text style={[styles.scanButtonText, { color: '#FFFFFF' }]}>LIBRARY</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </Link>
           </View>
         </View>
 
-        {/* Recent Scans */} 
+        {/* Recent Scans */}
         <View style={styles.sectionContainer}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>New Recent Scan</Text>
           {renderRecentScans()}
         </View>
 
-        {/* Discover Recipes */} 
+        {/* Discover Recipes */}
         <View style={styles.sectionContainer}>
           {/* Hardcode section title */}
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Discover Recipes</Text>
           <View style={styles.discoverContainer}>
             <Link href={"/similar-recipes" as any} asChild style={styles.discoverCardLink}>
-                <TouchableOpacity style={[discoverCardCombinedStyle, { backgroundColor: DISCOVER_COLORS.lightPink }]}>
-                   <View style={styles.discoverIconContainer}>
-                     <Ionicons name="flame-outline" size={32} color={colors.primary} />
-                   </View>
-                   {/* Hardcode card text */}
-                   <Text style={[styles.discoverText, { color: colors.text }]}>Similar Recipes</Text>
-                 </TouchableOpacity>
+              <TouchableOpacity style={styles.scanButtonContainer}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primary + 'CC']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[
+                    styles.scanButton,
+                    {
+                      shadowColor: colors.primary,
+                      height: 50,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: '100%'
+                    }
+                  ]}
+                >
+                  <Ionicons name="flame-outline" size={20} color="#FFFFFF" style={{ marginBottom: 4 }} />
+                  <Text style={[styles.scanButtonText, { color: '#FFFFFF' }]}>SIMILAR RECIPES</Text>
+                </LinearGradient>
+              </TouchableOpacity>
             </Link>
-             <Link href={"/nutrition-facts" as any} asChild style={styles.discoverCardLink}>
-                <TouchableOpacity style={[discoverCardCombinedStyle, { backgroundColor: DISCOVER_COLORS.lightBlue }]}>
-                   <View style={styles.discoverIconContainer}>
-                     <Ionicons name="bar-chart-outline" size={32} color={colors.primary} />
-                   </View>
-                    {/* Hardcode card text */}
-                   <Text style={[styles.discoverText, { color: colors.text }]}>Nutrition Facts</Text>
-                 </TouchableOpacity>
-             </Link>
+            <Link href={"/nutrition-facts" as any} asChild style={styles.discoverCardLink}>
+              <TouchableOpacity style={styles.scanButtonContainer}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primary + 'CC']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[
+                    styles.scanButton,
+                    {
+                      shadowColor: colors.primary,
+                      height: 50,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: '100%'
+                    }
+                  ]}
+                >
+                  <Ionicons name="bar-chart-outline" size={20} color="#FFFFFF" style={{ marginBottom: 4 }} />
+                  <Text style={[styles.scanButtonText, { color: '#FFFFFF' }]}>NUTRITION FACTS</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </Link>
           </View>
         </View>
       </ScrollView>
@@ -577,9 +759,9 @@ const menuOptionsStyles = (theme: any): MenuStyles => ({
         borderRadius: 8,
         marginTop: Platform.OS === 'ios' ? 45 : 50,
         marginLeft: 5,
-        shadowColor: theme.text, 
+        shadowColor: theme.text,
         shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: theme.isDarkMode ? 0.2 : 0.1, 
+        shadowOpacity: theme.isDarkMode ? 0.2 : 0.1,
         shadowRadius: 5,
         elevation: 4,
     },

@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 
@@ -78,13 +79,36 @@ export default function ScanScreen() {
   if (!permission.granted) {
     return (
       <SafeAreaView style={[styles.permissionContainer, { backgroundColor: colors.background }]}>
-        <Text style={[styles.permissionText, { color: colors.text }]}>{t('scan.permissionText')}</Text>
-        <TouchableOpacity onPress={requestPermission} style={[styles.permissionButton, { backgroundColor: colors.primary }]}>
-          <Text style={styles.permissionButtonText}>{t('scan.grantPermission')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/')} style={styles.backButtonPerm}>
-          <Text style={[styles.backButtonTextPerm, { color: colors.primary }]}>{t('common.goBack')}</Text>
-        </TouchableOpacity>
+        <LinearGradient
+          colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.permissionCardGradient}
+        >
+          <LinearGradient
+            colors={[colors.card, colors.card + '99']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.permissionCard, { borderColor: 'transparent' }]}
+          >
+            <Text style={[styles.permissionText, { color: colors.text }]}>{t('scan.permissionText')}</Text>
+
+            <TouchableOpacity style={styles.buttonContainer} onPress={requestPermission}>
+              <LinearGradient
+                colors={[colors.primary, colors.primary + 'CC']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.permissionButton}
+              >
+                <Text style={styles.permissionButtonText}>{t('scan.grantPermission')}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/')} style={styles.backButtonPerm}>
+              <Text style={[styles.backButtonTextPerm, { color: colors.primary }]}>{t('common.goBack')}</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </LinearGradient>
       </SafeAreaView>
     );
   }
@@ -113,31 +137,54 @@ export default function ScanScreen() {
         </View>
       </CameraView>
 
-      <View style={[styles.bottomSheet, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sheetTitle, { color: colors.text }]}>Scan Food</Text>
-        <Text style={[styles.sheetSubtitle, { color: colors.textSecondary }]}>Take a photo of your food to identify ingredients</Text>
-        <TouchableOpacity 
-          style={[
-            styles.captureButton, 
-            { backgroundColor: colors.primary },
-            !isCameraReady && styles.disabledButton 
-          ]} 
-          onPress={takePicture} 
-          disabled={!isCameraReady}
+      <LinearGradient
+        colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.bottomSheetGradient}
+      >
+        <LinearGradient
+          colors={[colors.card, colors.card + '99']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.bottomSheet, { borderColor: 'transparent' }]}
         >
-          <Text style={styles.captureButtonText}>Capture</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[
-            styles.galleryButton, 
-            { backgroundColor: colors.background, borderColor: colors.primary }
-          ]}
-          onPress={pickImage}
-        >
-          <Text style={[styles.galleryButtonText, { color: colors.primary }]}>Choose from gallery</Text>
-        </TouchableOpacity>
-      </View>
+          <Text style={[styles.sheetTitle, { color: colors.text }]}>Scan Food</Text>
+          <Text style={[styles.sheetSubtitle, { color: colors.textSecondary }]}>Take a photo of your food to identify ingredients</Text>
+
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={takePicture}
+            disabled={!isCameraReady}
+          >
+            <LinearGradient
+              colors={[colors.primary, colors.primary + 'CC']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                styles.captureButton,
+                !isCameraReady && styles.disabledButton
+              ]}
+            >
+              <Text style={styles.captureButtonText}>Capture</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={pickImage}
+          >
+            <LinearGradient
+              colors={[colors.primary, colors.primary + 'CC']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.galleryButton}
+            >
+              <Text style={styles.galleryButtonText}>Choose from gallery</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </LinearGradient>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
@@ -157,24 +204,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
+  permissionCardGradient: {
+    width: '90%',
+    borderRadius: 20,
+    padding: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  permissionCard: {
+    width: '100%',
+    borderRadius: 20,
+    padding: 25,
+    alignItems: 'center',
+  },
   permissionText: {
     fontSize: 18,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 25,
   },
   permissionButton: {
-    paddingVertical: 12,
+    paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 25,
-    marginBottom: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
   permissionButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   backButtonPerm: {
     padding: 10,
+    marginTop: 10,
   },
   backButtonTextPerm: {
     fontSize: 16,
@@ -237,11 +304,22 @@ const styles = StyleSheet.create({
     width: '80%',
     alignSelf: 'center',
   },
-  bottomSheet: {
+  bottomSheetGradient: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  bottomSheet: {
+    width: '100%',
     paddingTop: 20,
     paddingBottom: Platform.OS === 'ios' ? 80 : 70,
     paddingHorizontal: 25,
@@ -257,28 +335,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 25,
   },
+  buttonContainer: {
+    width: '100%',
+    marginBottom: 15,
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
   captureButton: {
     paddingVertical: 15,
-    borderRadius: 25,
     alignItems: 'center',
-    marginBottom: 15,
+    justifyContent: 'center',
+    width: '100%',
   },
   captureButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   galleryButton: {
     paddingVertical: 15,
-    borderRadius: 25,
     alignItems: 'center',
-    borderWidth: 2,
+    justifyContent: 'center',
+    width: '100%',
   },
   galleryButtonText: {
-    fontSize: 18,
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   disabledButton: {
     opacity: 0.5,
   },
-}); 
+});

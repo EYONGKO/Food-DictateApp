@@ -8,7 +8,8 @@ import * as Speech from 'expo-speech';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FoodRecognitionService } from '../services/foodRecognition';
 import { testFoodRecognition } from '../utils/testFoodRecognition';
-import { saveRecentScan } from '@/utils/storage';
+import { saveRecentScan, saveLastScanResult } from '@/utils/storage';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Import Theme and Translation hooks
 import { useTheme } from '@/contexts/ThemeContext';
@@ -53,9 +54,9 @@ type ScanResultsParams = {
     ingredients?: string; // JSON stringified array
 };
 
-// Remove the Clarifai import and add the fetch API for direct REST calls
-const CLARIFAI_API_KEY = 'YOUR_CLARIFAI_API_KEY'; // Replace with your API key
-const CLARIFAI_API_URL = 'https://api.clarifai.com/v2/models/bd367be194cf45149e75f01d59f77ba7/outputs';
+// Import API key from config
+import { CLARIFAI_API_KEY, CLARIFAI_MODEL_ID } from '../config/keys';
+const CLARIFAI_API_URL = `https://api.clarifai.com/v2/models/${CLARIFAI_MODEL_ID}/outputs`;
 
 interface ClarifaiConcept {
   id: string;
@@ -77,17 +78,17 @@ export default function ScanResultsScreen() {
   const [currentItemId, setCurrentItemId] = useState<string | null>(params.id || null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
-  // --- Check if Item is Saved --- 
+  // --- Check if Item is Saved ---
   const checkIfSaved = async (uriToCheck?: string, idToCheck?: string) => {
      if (!uriToCheck && !idToCheck) return;
      try {
        const existingLibrary = await AsyncStorage.getItem(LIBRARY_STORAGE_KEY);
        const libraryItems: LibraryItem[] = existingLibrary ? JSON.parse(existingLibrary) : [];
        // Check by ID if available (more reliable), otherwise fallback to URI
-       const found = idToCheck 
+       const found = idToCheck
             ? libraryItems.some(item => item.id === idToCheck)
-            : uriToCheck 
-            ? libraryItems.some(item => item.imageUri === uriToCheck) 
+            : uriToCheck
+            ? libraryItems.some(item => item.imageUri === uriToCheck)
             : false;
        setIsSaved(found);
      } catch (e) {
@@ -137,23 +138,23 @@ export default function ScanResultsScreen() {
       }
 
       const concepts: ClarifaiConcept[] = result.outputs[0].data.concepts;
-      
+
       // Get the most likely food item as the main dish
       const mainDish = concepts[0].name;
-      
+
       // Get other items as ingredients, filtering out low confidence predictions
       const ingredients: Ingredient[] = concepts
         .slice(1)
         .filter(concept => concept.value > 0.5) // Only include predictions with >50% confidence
         .map(concept => ({
-          name: concept.name.split('_').map(word => 
+          name: concept.name.split('_').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1)
           ).join(' '),
           confidence: Math.round(concept.value * 100)
         }));
 
       return {
-        foodName: mainDish.split('_').map(word => 
+        foodName: mainDish.split('_').map(word =>
           word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' '),
         ingredients
@@ -164,7 +165,7 @@ export default function ScanResultsScreen() {
     }
   };
 
-  // --- Effect to Load/Analyze Data --- 
+  // --- Effect to Load/Analyze Data ---
   useEffect(() => {
     const analyzeImage = async () => {
       setIsLoading(true);
@@ -175,12 +176,21 @@ export default function ScanResultsScreen() {
       if (params.isFromLibrary === 'true' && params.imageUri && params.foodName && params.ingredients) {
         try {
           const parsedIngredients: Ingredient[] = JSON.parse(params.ingredients);
-          setScanResult({
+          const result = {
             foodName: params.foodName,
             ingredients: parsedIngredients,
-          });
+          };
+          setScanResult(result);
           setIsSaved(true);
           setCurrentItemId(params.id || null);
+
+          // Save as last scan result for nutrition facts
+          await saveLastScanResult({
+            foodName: params.foodName,
+            ingredients: parsedIngredients,
+            imageUri: params.imageUri,
+            timestamp: params.timestamp ? parseInt(params.timestamp, 10) : Date.now()
+          });
         } catch (e) {
           console.error("Failed to parse ingredients from library params:", e);
           setAnalysisError(t('scanResults.loadLibraryError'));
@@ -188,7 +198,7 @@ export default function ScanResultsScreen() {
       } else if (params.imageUri) {
         try {
           // Use test utility in development
-          const result = __DEV__ 
+          const result = __DEV__
             ? await testFoodRecognition(params.imageUri)
             : await FoodRecognitionService.analyzeFoodImage(params.imageUri);
 
@@ -207,12 +217,20 @@ export default function ScanResultsScreen() {
               ingredients: result.ingredients.map(ing => ing.name),
               imageUri: params.imageUri,
             });
+
+            // Save as last scan result for nutrition facts
+            await saveLastScanResult({
+              foodName: result.foodName,
+              ingredients: result.ingredients,
+              imageUri: params.imageUri,
+              timestamp: Date.now()
+            });
           }
         } catch (error) {
           console.error("Failed to analyze image:", error);
           setAnalysisError(
-            error instanceof Error 
-              ? error.message 
+            error instanceof Error
+              ? error.message
               : 'Failed to analyze the food image. Please try again.'
           );
         }
@@ -226,7 +244,7 @@ export default function ScanResultsScreen() {
     analyzeImage();
   }, [params.imageUri]);
 
-  // --- Speech Handling --- 
+  // --- Speech Handling ---
   const speakIngredients = () => {
       // ... (speech logic remains largely the same, use t() for text)
       if (!scanResult) return;
@@ -261,7 +279,7 @@ export default function ScanResultsScreen() {
     };
   }, []);
 
-  // --- Save to Library --- 
+  // --- Save to Library ---
   const handleSaveToLibrary = async () => {
     if (!scanResult || !params.imageUri) {
         Alert.alert(t('scanResults.saveErrorTitle'), t('scanResults.saveErrorNoData'));
@@ -286,7 +304,7 @@ export default function ScanResultsScreen() {
     try {
         const existingLibraryJSON = await AsyncStorage.getItem(LIBRARY_STORAGE_KEY);
         const libraryItems: LibraryItem[] = existingLibraryJSON ? JSON.parse(existingLibraryJSON) : [];
-        
+
         // Check again if it somehow got saved concurrently
         const alreadyExists = libraryItems.some(item => item.id === newItem.id || item.imageUri === newItem.imageUri);
         if (alreadyExists) {
@@ -301,7 +319,7 @@ export default function ScanResultsScreen() {
         setIsSaved(true);
         setCurrentItemId(newItem.id); // Store the new ID
         console.log("[ScanResults] Item saved successfully.");
-        
+
         Alert.alert(
           t('scanResults.saveSuccessTitle'),
           t('scanResults.saveSuccessMessage'),
@@ -321,7 +339,7 @@ export default function ScanResultsScreen() {
     }
 };
 
-  // --- Render --- 
+  // --- Render ---
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -350,15 +368,35 @@ export default function ScanResultsScreen() {
           <Text style={[styles.headerText, { color: colors.text }]}>Scan Results</Text>
           <View style={{ width: 24 }} />
         </View>
-        <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle" size={48} color={colors.error} />
-          <Text style={[styles.errorText, { color: colors.error }]}>{analysisError}</Text>
-          <TouchableOpacity 
-            style={[styles.retryButton, { backgroundColor: colors.error }]}
-            onPress={() => router.back()}
+
+        <View style={styles.content}>
+          <LinearGradient
+            colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.errorContainerGradient}
           >
-            <Text style={[styles.retryButtonText, { color: colors.text }]}>Try Again</Text>
-          </TouchableOpacity>
+            <LinearGradient
+              colors={[colors.card, colors.card + '99']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.errorContainer, { borderColor: 'transparent' }]}
+            >
+              <Ionicons name="alert-circle" size={48} color={colors.error} />
+              <Text style={[styles.errorText, { color: colors.error }]}>{analysisError}</Text>
+
+              <TouchableOpacity style={styles.buttonContainer} onPress={() => router.back()}>
+                <LinearGradient
+                  colors={[colors.primary, colors.primary + 'CC']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.retryButton}
+                >
+                  <Text style={styles.retryButtonText}>Try Again</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </LinearGradient>
+          </LinearGradient>
         </View>
       </SafeAreaView>
     );
@@ -375,69 +413,150 @@ export default function ScanResultsScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.imageContainer, { backgroundColor: colors.card }]}>
-          {params.imageUri ? (
-            <Image source={{ uri: params.imageUri }} style={styles.image} resizeMode="cover" />
-          ) : (
-            <View style={[styles.placeholderImage, { backgroundColor: colors.card }]}>
-              <Ionicons name="image" size={40} color={colors.textSecondary} />
-              <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>Scanned Image</Text>
-            </View>
-          )}
-        </View>
+        <LinearGradient
+          colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.imageContainerGradient}
+        >
+          <View style={[styles.imageContainer, { backgroundColor: colors.card }]}>
+            {params.imageUri ? (
+              <Image source={{ uri: params.imageUri }} style={styles.image} resizeMode="cover" />
+            ) : (
+              <View style={[styles.placeholderImage, { backgroundColor: colors.card }]}>
+                <Ionicons name="image" size={40} color={colors.textSecondary} />
+                <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>Scanned Image</Text>
+              </View>
+            )}
+          </View>
+        </LinearGradient>
 
         {scanResult && (
-          <View style={styles.resultsContainer}>
-            <View style={styles.identifiedSection}>
-              <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Identified as:</Text>
-              <Text style={[styles.foodName, { color: colors.text }]}>{scanResult.foodName}</Text>
-            </View>
-
-            <View style={styles.ingredientsSection}>
-              <View style={styles.ingredientsHeader}>
-                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Detected Ingredients:</Text>
-                <TouchableOpacity onPress={speakIngredients} style={styles.speakButton}>
-                  <Ionicons 
-                    name={isSpeaking ? "volume-high" : "volume-medium"} 
-                    size={24} 
-                    color={colors.primary} 
-                  />
-                </TouchableOpacity>
+          <LinearGradient
+            colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.resultsContainerGradient}
+          >
+            <LinearGradient
+              colors={[colors.card, colors.card + '99']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.resultsContainer, { borderColor: 'transparent' }]}
+            >
+              <View style={styles.identifiedSection}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Identified as:</Text>
+                <Text style={[styles.foodName, { color: colors.text }]}>{scanResult.foodName}</Text>
               </View>
 
-              {scanResult.ingredients.map((ingredient, index) => (
-                <View key={index} style={[styles.ingredientItem, { backgroundColor: `${colors.card}40` }]}>
-                  <Text style={[styles.ingredientText, { color: colors.text }]}>
-                    • {ingredient.name} ({ingredient.confidence}% confidence)
-                  </Text>
+              <View style={styles.ingredientsSection}>
+                <View style={styles.ingredientsHeader}>
+                  <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Detected Ingredients:</Text>
+                  <TouchableOpacity onPress={speakIngredients} style={styles.speakButton}>
+                    <Ionicons
+                      name={isSpeaking ? "volume-high" : "volume-medium"}
+                      size={24}
+                      color={colors.primary}
+                    />
+                  </TouchableOpacity>
                 </View>
-              ))}
-            </View>
-          </View>
+
+                {scanResult.ingredients.map((ingredient, idx) => (
+                  <View key={`ingredient-${idx}`} style={[styles.ingredientItem, { backgroundColor: `${colors.card}40` }]}>
+                    <Text style={[styles.ingredientText, { color: colors.text }]}>
+                      • {ingredient.name} ({ingredient.confidence}% confidence)
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </LinearGradient>
+          </LinearGradient>
         )}
       </ScrollView>
 
-      <View style={styles.bottomButtons}>
-        <TouchableOpacity
-          style={[styles.saveButton, { backgroundColor: colors.primary }]}
-          onPress={handleSaveToLibrary}
-          disabled={isSaved}
+      <LinearGradient
+        colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.bottomButtonsGradient}
+      >
+        <LinearGradient
+          colors={[colors.card, colors.card + '99']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.bottomButtons, { borderColor: 'transparent' }]}
         >
-          <Text style={styles.saveButtonText}>Save to Library</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={handleSaveToLibrary}
+            disabled={isSaved}
+          >
+            <LinearGradient
+              colors={[colors.primary, colors.primary + 'CC']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                styles.saveButton,
+                isSaved && styles.disabledButton
+              ]}
+            >
+              <Text style={styles.saveButtonText}>Save to Library</Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.listenButton, { backgroundColor: colors.background, borderColor: colors.primary }]}
-          onPress={speakIngredients}
-        >
-          <Text style={[styles.listenButtonText, { color: colors.primary }]}>Listen to Ingredients</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={styles.secondaryButtonContainer}
+              onPress={speakIngredients}
+            >
+              <LinearGradient
+                colors={[colors.primary, colors.primary + 'CC']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.secondaryButton}
+              >
+                <Ionicons name={isSpeaking ? "volume-high" : "volume-medium"} size={18} color="#FFFFFF" style={styles.buttonIcon} />
+                <Text style={styles.secondaryButtonText}>Listen</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.secondaryButtonContainer}
+              onPress={() => scanResult && router.push({ pathname: '/nutrition-facts', params: { foodName: scanResult.foodName } })}
+            >
+              <LinearGradient
+                colors={[colors.primary, colors.primary + 'CC']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.secondaryButton}
+              >
+                <Ionicons name="nutrition-outline" size={18} color="#FFFFFF" style={styles.buttonIcon} />
+                <Text style={styles.secondaryButtonText}>Nutrition Facts</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={() => scanResult && router.push({ pathname: '/similar-recipes', params: { recipeName: scanResult.foodName } })}
+          >
+            <LinearGradient
+              colors={[colors.primary, colors.primary + 'CC']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.recipeButton}
+            >
+              <Ionicons name="restaurant-outline" size={18} color="#FFFFFF" style={styles.buttonIcon} />
+              <Text style={styles.secondaryButtonText}>Similar Recipes</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </LinearGradient>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
 
-// --- Styles --- 
+// --- Styles ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -471,12 +590,22 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
   },
+  imageContainerGradient: {
+    width: '100%',
+    borderRadius: 15,
+    padding: 2,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
   imageContainer: {
     width: '100%',
     height: 200,
-    borderRadius: 10,
+    borderRadius: 15,
     overflow: 'hidden',
-    marginBottom: 20,
   },
   image: {
     width: '100%',
@@ -492,7 +621,20 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 14,
   },
+  resultsContainerGradient: {
+    width: '100%',
+    borderRadius: 15,
+    padding: 2,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
   resultsContainer: {
+    width: '100%',
+    borderRadius: 15,
     padding: 16,
   },
   identifiedSection: {
@@ -527,48 +669,116 @@ const styles = StyleSheet.create({
   ingredientText: {
     fontSize: 16,
   },
+  bottomButtonsGradient: {
+    width: '100%',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    padding: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
   bottomButtons: {
+    width: '100%',
     padding: 16,
     paddingBottom: Platform.OS === 'ios' ? 32 : 16,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+  },
+  buttonContainer: {
+    width: '100%',
+    marginBottom: 8,
+    borderRadius: 25,
+    overflow: 'hidden',
   },
   saveButton: {
     padding: 16,
-    borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'center',
+    width: '100%',
   },
   saveButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
-  listenButton: {
-    padding: 16,
-    borderRadius: 8,
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  secondaryButtonContainer: {
+    flex: 1,
+    marginHorizontal: 4,
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
+  secondaryButton: {
+    flexDirection: 'row',
+    padding: 12,
     alignItems: 'center',
-    borderWidth: 1,
+    justifyContent: 'center',
+    width: '100%',
   },
-  listenButtonText: {
-    fontSize: 16,
+  recipeButton: {
+    flexDirection: 'row',
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  secondaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  buttonIcon: {
+    marginRight: 6,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  errorContainerGradient: {
+    width: '90%',
+    borderRadius: 15,
+    padding: 2,
+    marginTop: 20,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
   errorContainer: {
-    padding: 20,
+    width: '100%',
+    padding: 25,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },
   errorText: {
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 15,
+    marginVertical: 20,
   },
   retryButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
   retryButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
 });
