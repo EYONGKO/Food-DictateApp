@@ -13,6 +13,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import events from '@/utils/events';
 import { LinearGradient } from 'expo-linear-gradient';
+import ResponsiveContainer from '@/components/ResponsiveContainer';
+import { commonWebStyles, createWebStyles } from '@/utils/webStyles';
 
 // Import Lottie for native platforms only
 import LottieView from 'lottie-react-native';
@@ -70,6 +72,9 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     paddingTop: 10,
     paddingBottom: 30, // More space at the bottom
+    ...(Platform.OS === 'web' ? {
+      maxWidth: '100%',
+    } : {}),
   },
   welcomeCard: {
     borderRadius: 18,
@@ -160,10 +165,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginHorizontal: -5, // Counteract card margin
+    ...(Platform.OS === 'web' ? {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+      gap: '16px',
+    } : {}),
   },
   discoverCardLink: {
      flex: 1,
      marginHorizontal: 5, // Space between cards
+     ...(Platform.OS === 'web' ? {
+       margin: 0,
+       transition: 'transform 0.2s ease',
+       ':hover': {
+         transform: 'translateY(-4px)',
+       }
+     } : {}),
   },
   discoverCardBase: {
      borderRadius: 15,
@@ -352,15 +369,40 @@ export default function HomeScreen() {
     borderWidth: StyleSheet.hairlineWidth,
   };
 
+  // Enhanced web styles with hover effects and better shadows
   const webRecentItemStyle = {
-      borderWidth: 1,
-      borderColor: colors.border // Match theme border on web
+    borderWidth: 1,
+    borderColor: colors.border,
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+    transition: 'all 0.2s ease',
+    cursor: 'pointer',
+    ':hover': {
+      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      transform: 'translateY(-2px)',
+    }
   };
 
   const webDiscoverCardStyle = {
-      borderWidth: 1,
-      borderColor: colors.border
+    borderWidth: 1,
+    borderColor: colors.border,
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+    ':hover': {
+      boxShadow: '0 6px 12px rgba(0, 0, 0, 0.12)',
+      transform: 'translateY(-3px)',
+    }
   };
+
+  // Web-specific grid layout for discover cards
+  const webGridStyles = createWebStyles({
+    discoverGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+      gap: '16px',
+      width: '100%',
+    }
+  });
   // ----------------------------------------
 
   // --- Combined Styles ---
@@ -464,37 +506,39 @@ export default function HomeScreen() {
     ));
   };
 
+  const isWeb = Platform.OS === 'web';
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       {/* Header */}
-       <View style={[styles.header, { backgroundColor: colors.primary }]}>
-         {/* --- Menu Dropdown --- */}
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
+        {/* --- Menu Dropdown --- */}
         <Menu onSelect={handleMenuSelect}>
-            <MenuTrigger style={styles.headerButton}>
-                <Ionicons name="menu-outline" size={28} color={colors.background} />
-            </MenuTrigger>
-            <MenuOptions>
-                {menuItems.map((item) => (
-                    <React.Fragment key={item.value}>
-                        {item.isDividerTop && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
-                        <MenuOption value={item.value}>
-                            <View style={styles.menuOptionWrapper}>
-                                <Ionicons
-                                    name={item.icon}
-                                    size={20}
-                                    color={item.value === 'logout' ? colors.error : colors.textSecondary}
-                                    style={styles.menuOptionIcon}
-                                />
-                                <Text style={[styles.menuOptionText, { color: item.value === 'logout' ? colors.error : colors.text }]}>{item.label}</Text>
-                            </View>
-                        </MenuOption>
-                    </React.Fragment>
-                ))}
-            </MenuOptions>
+          <MenuTrigger style={styles.headerButton}>
+            <Ionicons name="menu-outline" size={28} color={colors.background} />
+          </MenuTrigger>
+          <MenuOptions>
+            {menuItems.map((item) => (
+              <React.Fragment key={item.value}>
+                {item.isDividerTop && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
+                <MenuOption value={item.value}>
+                  <View style={styles.menuOptionWrapper}>
+                    <Ionicons
+                      name={item.icon}
+                      size={20}
+                      color={item.value === 'logout' ? colors.error : colors.textSecondary}
+                      style={styles.menuOptionIcon}
+                    />
+                    <Text style={[styles.menuOptionText, { color: item.value === 'logout' ? colors.error : colors.text }]}>{item.label}</Text>
+                  </View>
+                </MenuOption>
+              </React.Fragment>
+            ))}
+          </MenuOptions>
         </Menu>
         {/* ------------------- */}
 
-        <Text style={[styles.headerTitle, { color: colors.background }]}>Food Dictate</Text>
+        <Text style={[styles.headerTitle, { color: colors.background }]}>Food Dictation 2025</Text>
 
         <TouchableOpacity
           style={styles.profileButton}
@@ -504,25 +548,33 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
-        {/* Welcome Card */}
-         <LinearGradient
-           colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
-           start={{ x: 0, y: 0 }}
-           end={{ x: 1, y: 1 }}
-           style={{
-             borderRadius: 20,
-             padding: 2,
-             width: '88%',
-             alignSelf: 'center',
-             shadowColor: colors.primary,
-             shadowOffset: { width: 0, height: 2 },
-             shadowOpacity: 0.3,
-             shadowRadius: 10,
-             elevation: 6,
-             marginTop: 25,
-             marginBottom: 15,
-           }}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollViewContent,
+          isWeb && { paddingHorizontal: 16 }
+        ]}
+      >
+        {isWeb ? (
+          <ResponsiveContainer>
+            {/* Welcome Card */}
+            <LinearGradient
+              colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                borderRadius: 20,
+                padding: 2,
+                width: isWeb ? '100%' : '88%',
+                alignSelf: 'center',
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
+                elevation: 6,
+                marginTop: 25,
+                marginBottom: 15,
+              }}>
            <LinearGradient
              colors={[colors.card, colors.card + '99']}
              start={{ x: 0, y: 0 }}
@@ -737,6 +789,9 @@ export default function HomeScreen() {
             </Link>
           </View>
         </View>
+        {isWeb && (
+          </ResponsiveContainer>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

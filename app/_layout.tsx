@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react';
 import { router, usePathname } from 'expo-router';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import '../firebase';
+import { Platform, StyleSheet, View } from 'react-native';
+import ResponsiveContainer from '@/components/ResponsiveContainer';
 
 export default function RootLayout() {
   const pathname = usePathname();
@@ -45,24 +47,52 @@ export default function RootLayout() {
     // ...existing navigation logic
   };
 
+  const isWeb = Platform.OS === 'web';
+
   return (
     <I18nextProvider i18n={i18n}>
       <ThemeProvider>
         <MenuProvider>
           <SafeAreaProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="settings" />
-              <Stack.Screen name="edit-profile" />
-              <Stack.Screen name="scan-results" />
-              <Stack.Screen name="nutrition-facts" />
-              <Stack.Screen name="similar-recipes" />
-              <Stack.Screen name="login" />
-              <Stack.Screen name="register" />
-            </Stack>
+            {isWeb ? (
+              <View style={styles.webContainer}>
+                <ResponsiveContainer>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="settings" />
+                    <Stack.Screen name="edit-profile" />
+                    <Stack.Screen name="scan-results" />
+                    <Stack.Screen name="nutrition-facts" />
+                    <Stack.Screen name="similar-recipes" />
+                    <Stack.Screen name="login" />
+                    <Stack.Screen name="register" />
+                  </Stack>
+                </ResponsiveContainer>
+              </View>
+            ) : (
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="settings" />
+                <Stack.Screen name="edit-profile" />
+                <Stack.Screen name="scan-results" />
+                <Stack.Screen name="nutrition-facts" />
+                <Stack.Screen name="similar-recipes" />
+                <Stack.Screen name="login" />
+                <Stack.Screen name="register" />
+              </Stack>
+            )}
           </SafeAreaProvider>
         </MenuProvider>
       </ThemeProvider>
     </I18nextProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  webContainer: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    minHeight: '100vh',
+    width: '100%',
+  },
+});

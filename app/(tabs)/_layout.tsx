@@ -2,6 +2,67 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
 
+// Define icon components as functions that return JSX elements
+function HomeIcon({ color, focused }: { color: string; focused: boolean }) {
+  return (
+    <Ionicons
+      name={focused ? 'home' : 'home-outline'}
+      size={24}
+      color={color}
+    />
+  );
+}
+
+function ScanIcon({ color, focused }: { color: string; focused: boolean }) {
+  return (
+    <Ionicons
+      name={focused ? 'scan-circle' : 'scan-circle-outline'}
+      size={24}
+      color={color}
+    />
+  );
+}
+
+function LibraryIcon({ color, focused }: { color: string; focused: boolean }) {
+  return (
+    <Ionicons
+      name={focused ? 'library' : 'library-outline'}
+      size={24}
+      color={color}
+    />
+  );
+}
+
+function RecipesIcon({ color, focused }: { color: string; focused: boolean }) {
+  return (
+    <Ionicons
+      name={focused ? 'restaurant' : 'restaurant-outline'}
+      size={24}
+      color={color}
+    />
+  );
+}
+
+function NutritionIcon({ color, focused }: { color: string; focused: boolean }) {
+  return (
+    <Ionicons
+      name={focused ? 'nutrition' : 'nutrition-outline'}
+      size={24}
+      color={color}
+    />
+  );
+}
+
+function ProfileIcon({ color, focused }: { color: string; focused: boolean }) {
+  return (
+    <Ionicons
+      name={focused ? 'person-circle' : 'person-circle-outline'}
+      size={24}
+      color={color}
+    />
+  );
+}
+
 export default function TabLayout() {
   const { colors } = useTheme();
 
@@ -23,78 +84,42 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'home' : 'home-outline'}
-              size={24}
-              color={color}
-            />
-          ),
+          tabBarIcon: HomeIcon,
         }}
       />
       <Tabs.Screen
         name="scan"
         options={{
           title: 'Scan',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'scan-circle' : 'scan-circle-outline'}
-              size={24}
-              color={color}
-            />
-          ),
+          tabBarIcon: ScanIcon,
         }}
       />
       <Tabs.Screen
         name="library"
         options={{
           title: 'Library',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'library' : 'library-outline'}
-              size={24}
-              color={color}
-            />
-          ),
+          tabBarIcon: LibraryIcon,
         }}
       />
       <Tabs.Screen
         name="recipes"
         options={{
           title: 'Recipes',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'restaurant' : 'restaurant-outline'}
-              size={24}
-              color={color}
-            />
-          ),
+          tabBarIcon: RecipesIcon,
         }}
       />
       <Tabs.Screen
         name="nutrition-facts"
         options={{
           title: 'Nutrition',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'nutrition' : 'nutrition-outline'}
-              size={24}
-              color={color}
-            />
-          ),
+          tabBarIcon: NutritionIcon,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'person-circle' : 'person-circle-outline'}
-              size={24}
-              color={color}
-            />
-          ),
+          tabBarIcon: ProfileIcon,
         }}
       />
     </Tabs>
