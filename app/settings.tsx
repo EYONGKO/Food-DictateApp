@@ -551,7 +551,7 @@ export default function SettingsScreen() {
 
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>
-            Food Dictate App © 2023
+            Food Dictation 2025 © 2025
           </Text>
         </View>
       </ScrollView>
