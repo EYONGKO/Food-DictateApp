@@ -557,8 +557,9 @@ export default function HomeScreen() {
       >
         {isWeb ? (
           <ResponsiveContainer>
-            {/* Welcome Card */}
-            <LinearGradient
+            <View>
+              {/* Welcome Card */}
+              <LinearGradient
               colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -789,8 +790,195 @@ export default function HomeScreen() {
             </Link>
           </View>
         </View>
-        {isWeb && (
-          </ResponsiveContainer>
+          </View>
+        </ResponsiveContainer>
+        ) : (
+          /* Non-web content - same content without ResponsiveContainer */
+          <View>
+            {/* Welcome Card */}
+            <LinearGradient
+              colors={[colors.primary + 'CC', '#FF6B6B', '#FFD166']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                borderRadius: 20,
+                padding: 2,
+                width: '88%',
+                alignSelf: 'center',
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
+                elevation: 6,
+                marginTop: 25,
+                marginBottom: 15,
+              }}>
+              <LinearGradient
+                colors={[colors.card, colors.card + '99']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[styles.welcomeCard, { borderColor: 'transparent' }]}
+              >
+                {/* Content is the same as in the web version */}
+                <View style={{ alignItems: 'center', paddingTop: 5, paddingBottom: 0 }}>
+                  <View style={{
+                    backgroundColor: 'rgba(255, 214, 0, 0.15)',
+                    borderRadius: 40,
+                    padding: 5,
+                    marginBottom: 2,
+                  }}>
+                    <LottieView
+                      source={fireAnimation}
+                      autoPlay
+                      loop
+                      style={{ width: 60, height: 60 }}
+                    />
+                  </View>
+                </View>
+                <View style={{ marginTop: -15 }}>
+                  <Text
+                    style={[
+                      styles.welcomeDiscover,
+                      {
+                        color: colors.primary,
+                        textAlign: 'center',
+                      }
+                    ]}
+                  >
+                    What would you like to discover today?
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.scanButtonContainer}
+                  onPress={() => router.replace('/(tabs)/scan')}
+                >
+                  <LinearGradient
+                    colors={[colors.primary, colors.primary + 'CC']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[
+                      styles.scanButton,
+                      {
+                        shadowColor: colors.primary,
+                        paddingVertical: 14,
+                        paddingHorizontal: 35
+                      }
+                    ]}
+                  >
+                    <Text style={[styles.scanButtonText, { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' }]}>QUICK SCAN</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </LinearGradient>
+            </LinearGradient>
+
+            {/* Quick Actions */}
+            <View style={styles.sectionContainer}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
+              <View style={styles.discoverContainer}>
+                <Link href="/(tabs)/scan" asChild style={styles.discoverCardLink}>
+                  <TouchableOpacity style={styles.scanButtonContainer}>
+                    <LinearGradient
+                      colors={[colors.primary, colors.primary + 'CC']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={[
+                        styles.scanButton,
+                        {
+                          shadowColor: colors.primary,
+                          height: 50,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          width: '100%'
+                        }
+                      ]}
+                    >
+                      <Ionicons name="camera-outline" size={20} color="#FFFFFF" style={{ marginBottom: 4 }} />
+                      <Text style={[styles.scanButtonText, { color: '#FFFFFF' }]}>SCAN FOOD</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </Link>
+                <Link href="/(tabs)/library" asChild style={styles.discoverCardLink}>
+                  <TouchableOpacity style={styles.scanButtonContainer}>
+                    <LinearGradient
+                      colors={[colors.primary, colors.primary + 'CC']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={[
+                        styles.scanButton,
+                        {
+                          shadowColor: colors.primary,
+                          height: 50,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          width: '100%'
+                        }
+                      ]}
+                    >
+                      <Ionicons name="library-outline" size={20} color="#FFFFFF" style={{ marginBottom: 4 }} />
+                      <Text style={[styles.scanButtonText, { color: '#FFFFFF' }]}>LIBRARY</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </Link>
+              </View>
+            </View>
+
+            {/* Recent Scans */}
+            <View style={styles.sectionContainer}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>New Recent Scan</Text>
+              {renderRecentScans()}
+            </View>
+
+            {/* Discover Recipes */}
+            <View style={styles.sectionContainer}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Discover Recipes</Text>
+              <View style={styles.discoverContainer}>
+                <Link href={"/similar-recipes" as any} asChild style={styles.discoverCardLink}>
+                  <TouchableOpacity style={styles.scanButtonContainer}>
+                    <LinearGradient
+                      colors={[colors.primary, colors.primary + 'CC']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={[
+                        styles.scanButton,
+                        {
+                          shadowColor: colors.primary,
+                          height: 50,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          width: '100%'
+                        }
+                      ]}
+                    >
+                      <Ionicons name="flame-outline" size={20} color="#FFFFFF" style={{ marginBottom: 4 }} />
+                      <Text style={[styles.scanButtonText, { color: '#FFFFFF' }]}>SIMILAR RECIPES</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </Link>
+                <Link href={"/nutrition-facts" as any} asChild style={styles.discoverCardLink}>
+                  <TouchableOpacity style={styles.scanButtonContainer}>
+                    <LinearGradient
+                      colors={[colors.primary, colors.primary + 'CC']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={[
+                        styles.scanButton,
+                        {
+                          shadowColor: colors.primary,
+                          height: 50,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          width: '100%'
+                        }
+                      ]}
+                    >
+                      <Ionicons name="bar-chart-outline" size={20} color="#FFFFFF" style={{ marginBottom: 4 }} />
+                      <Text style={[styles.scanButtonText, { color: '#FFFFFF' }]}>NUTRITION FACTS</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </Link>
+              </View>
+            </View>
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>
