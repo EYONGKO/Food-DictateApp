@@ -26,8 +26,7 @@ export default function RegisterScreen() {
       style={styles.container}
     >
       <View style={styles.formContainer}>
-        <Text style={styles.title}>Food Dictation 2025</Text>
-        <Text style={styles.subtitle}>Create a new account</Text>
+        <Text style={styles.title}>Register</Text>
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -73,13 +72,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#fff',
     marginBottom: 24,
-    opacity: 0.8,
   },
   input: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',

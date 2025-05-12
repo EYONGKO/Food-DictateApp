@@ -8,14 +8,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: true,
-        headerTitle: "Food Dictation 2025",
-        headerStyle: {
-          backgroundColor: colors.background,
-        },
-        headerTitleStyle: {
-          color: colors.text,
-        },
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopColor: colors.border,
